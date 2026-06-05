@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作台中心 - 智能垃圾分类系统</title>
+    <style>
+        :root { --bg-base: #f4f7f6; --surface: rgba(255, 255, 255, 0.85); --surface-solid: #ffffff; --primary: #059669; --primary-light: #10b981; --primary-fade: rgba(16, 185, 129, 0.1); --secondary: #3b82f6; --accent: #f59e0b; --text-main: #0f172a; --text-sub: #64748b; --border: rgba(226, 232, 240, 0.8); --radius-sm: 8px; --radius-md: 16px; --radius-lg: 24px; --radius-full: 9999px; --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05); --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05); --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.02); --shadow-glow: 0 0 24px rgba(16, 185, 129, 0.15); --sidebar-w: 260px; --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-family); }
+        body { background: var(--bg-base); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
+        .aurora-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; overflow: hidden; pointer-events: none; background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 24px 24px; }
+        .aurora-blob { position: absolute; filter: blur(80px); opacity: 0.5; border-radius: 50%; animation: floatGlow 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1); }
+        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: rgba(16, 185, 129, 0.15); animation-delay: 0s; }
+        .blob-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: rgba(59, 130, 246, 0.1); animation-delay: -5s; }
+        @keyframes floatGlow { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(5%, 10%) scale(1.1); } }
+        ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; } ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .sidebar { position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh; background: var(--surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 100; padding: 24px 20px; transition: 0.3s; }
+        .logo-area { display: flex; align-items: center; gap: 12px; padding: 0 12px 32px 12px; text-decoration: none; }
+        .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary-light), var(--primary)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; box-shadow: var(--shadow-glow); }
+        .logo-text { font-size: 1.25rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
+        .nav-group-title { font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin: 16px 0 8px 12px; }
+        .nav-list { display: flex; flex-direction: column; gap: 4px; flex: 1; list-style: none; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px; text-decoration: none; color: var(--text-sub); border-radius: var(--radius-sm); font-weight: 500; font-size: 0.95rem; transition: all 0.2s; position: relative; }
+        .nav-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .nav-item:hover { background: var(--bg-base); color: var(--text-main); transform: translateX(4px); }
+        .nav-item.active { background: var(--primary-fade); color: var(--primary); font-weight: 600; }
+        .nav-item.active::before { content: ''; position: absolute; left: -20px; top: 50%; transform: translateY(-50%); height: 20px; width: 4px; background: var(--primary); border-radius: 0 4px 4px 0; }
+        .sidebar-footer { padding-top: 24px; border-top: 1px solid var(--border); }
+        .user-mini-card { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-base); border-radius: var(--radius-md); border: 1px solid var(--border); cursor: pointer; transition: 0.2s; text-decoration: none; color: inherit; }
+        .user-mini-card:hover { border-color: var(--primary-light); }
+        .user-avatar { width: 36px; height: 36px; border-radius: var(--radius-full); background: var(--primary-light); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .user-info { display: flex; flex-direction: column; }
+        .user-name { font-size: 0.9rem; font-weight: 600; }
+        .user-role { font-size: 0.75rem; color: var(--text-sub); }
+        .main-wrapper { margin-left: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; }
+        .header { height: 72px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between; background: rgba(244, 247, 246, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 90; }
+        .breadcrumb { font-size: 0.9rem; font-weight: 500; color: var(--text-sub); }
+        .breadcrumb span { color: var(--text-main); font-weight: 600; }
+        .header-actions { display: flex; align-items: center; gap: 20px; }
+        .search-bar { display: flex; align-items: center; gap: 8px; background: var(--surface-solid); border: 1px solid var(--border); padding: 8px 16px; border-radius: var(--radius-full); width: 240px; transition: 0.2s; box-shadow: var(--shadow-sm); }
+        .search-bar:focus-within { border-color: var(--primary-light); box-shadow: 0 0 0 3px var(--primary-fade); width: 280px; }
+        .search-bar input { border: none; outline: none; background: transparent; width: 100%; font-size: 0.9rem; }
+        .search-bar svg { width: 16px; height: 16px; color: var(--text-sub); }
+        .icon-btn { width: 40px; height: 40px; border-radius: var(--radius-full); border: 1px solid var(--border); background: var(--surface-solid); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; position: relative; color: var(--text-sub); }
+        .icon-btn:hover { color: var(--primary); border-color: var(--primary-light); background: var(--bg-base); }
+        .icon-btn svg { width: 18px; height: 18px; }
+        .badge-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 2px solid white; animation: pulseRed 2s infinite; }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .dashboard-content { padding: 32px 40px; flex: 1; }
+        .welcome-section { margin-bottom: 32px; animation: slideUp 0.6s ease forwards; }
+        .welcome-section h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -1px; color: var(--text-main); margin-bottom: 8px; }
+        .welcome-section p { font-size: 1.05rem; color: var(--text-sub); }
+        .bento-grid { display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: minmax(140px, auto); gap: 24px; }
+        .bento-card { background: var(--surface-solid); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative; overflow: hidden; opacity: 0; animation: slideUp 0.6s forwards; }
+        .bento-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--primary-light); }
+        .bento-card::after { content: ''; position: absolute; top: 0; left: -150%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent); transform: skewX(-20deg); transition: 0.6s; z-index: 1; pointer-events: none; }
+        .bento-card:hover::after { left: 200%; }
+        .stat-card { grid-column: span 3; display: flex; flex-direction: column; justify-content: space-between; }
+        .stat-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+        .stat-icon { width: 44px; height: 44px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+        .bg-green { background: #dcfce7; color: #15803d; } .bg-blue { background: #dbeafe; color: #1d4ed8; } .bg-purple { background: #f3e8ff; color: #7e22ce; } .bg-orange { background: #fef3c7; color: #b45309; }
+        .stat-trend { font-size: 0.85rem; font-weight: 600; padding: 4px 8px; border-radius: 20px; display: flex; align-items: center; gap: 4px; }
+        .trend-up { background: #ecfdf5; color: #059669; } .trend-flat { background: #f1f5f9; color: #475569; }
+        .stat-value { font-size: 2rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; line-height: 1; }
+        .stat-label { font-size: 0.9rem; color: var(--text-sub); font-weight: 500; }
+        .feature-hero { grid-column: span 6; grid-row: span 2; display: flex; flex-direction: column; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 32px; text-decoration: none; border: none; }
+        .feature-hero .stat-label, .feature-hero .stat-trend { color: rgba(255,255,255,0.9); }
+        .feature-hero h3 { font-size: 2rem; font-weight: 800; margin: 16px 0 12px 0; }
+        .feature-hero p { font-size: 1.05rem; line-height: 1.6; opacity: 0.9; margin-bottom: auto; }
+        .hero-action { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.2); padding: 12px 24px; border-radius: var(--radius-full); font-weight: 600; width: max-content; transition: 0.3s; border: 1px solid rgba(255,255,255,0.3); backdrop-filter: blur(10px); }
+        .feature-hero:hover .hero-action { background: white; color: var(--primary-dark); transform: scale(1.05); }
+        .feature-box { grid-column: span 3; grid-row: span 2; display: flex; flex-direction: column; text-decoration: none; }
+        .feature-box .icon-lg { width: 56px; height: 56px; background: var(--bg-base); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 20px; transition: 0.3s; border: 1px solid var(--border); }
+        .feature-box:hover .icon-lg { background: var(--primary-light); color: white; box-shadow: var(--shadow-glow); transform: rotate(-5deg) scale(1.1); }
+        .feature-box h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; color: var(--text-main); }
+        .feature-box p { font-size: 0.9rem; color: var(--text-sub); line-height: 1.6; margin-bottom: auto; }
+        .feature-box .link-text { font-size: 0.9rem; font-weight: 600; color: var(--primary); display: flex; align-items: center; gap: 4px; margin-top: 16px; }
+        .chart-card { grid-column: span 8; grid-row: span 2; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+        .css-chart { display: flex; align-items: flex-end; justify-content: space-between; height: 180px; padding-top: 20px; gap: 12px; }
+        .bar-group { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; height: 100%; justify-content: flex-end; }
+        .bar { width: 100%; max-width: 36px; background: var(--primary-light); border-radius: 6px 6px 4px 4px; transition: 0.4s; position: relative; cursor: pointer; animation: barGrow 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; transform-origin: bottom; opacity: 0; }
+        .bar:hover { background: var(--primary); transform: scaleY(1.05); }
+        .bar::before { content: attr(data-val); position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: 600; color: var(--text-sub); opacity: 0; transition: 0.2s; }
+        .bar:hover::before { opacity: 1; top: -30px; color: var(--primary); }
+        .bar-label { font-size: 0.8rem; font-weight: 500; color: var(--text-sub); }
+        @keyframes barGrow { 0% { transform: scaleY(0); opacity: 0; } 100% { transform: scaleY(1); opacity: 1; } }
+        .activity-card { grid-column: span 4; grid-row: span 2; overflow: hidden; display: flex; flex-direction: column; }
+        .activity-list { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; flex: 1; }
+        .activity-item { display: flex; gap: 12px; align-items: flex-start; }
+        .act-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg-base); font-size: 0.85rem; flex-shrink: 0; border: 1px solid var(--border); }
+        .act-content { display: flex; flex-direction: column; gap: 4px; }
+        .act-text { font-size: 0.9rem; color: var(--text-main); font-weight: 500; line-height: 1.4; }
+        .act-time { font-size: 0.75rem; color: var(--text-sub); }
+        .d-1 { animation-delay: 0.1s; } .d-2 { animation-delay: 0.2s; } .d-3 { animation-delay: 0.3s; } .d-4 { animation-delay: 0.4s; } .d-5 { animation-delay: 0.5s; } .d-6 { animation-delay: 0.6s; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 1200px) { .stat-card { grid-column: span 6; } .feature-hero { grid-column: span 12; } .feature-box { grid-column: span 6; } .chart-card { grid-column: span 12; } .activity-card { grid-column: span 12; } }
+        @media (max-width: 768px) { .sidebar { transform: translateX(-100%); } .main-wrapper { margin-left: 0; } .header { padding: 0 20px; } .search-bar { display: none; } .dashboard-content { padding: 20px; } .bento-grid { display: flex; flex-direction: column; gap: 16px; } .welcome-section h1 { font-size: 1.8rem; } }
+    </style>
+</head>
+<body>
+
+    <div class="aurora-bg">
+        <div class="aurora-blob blob-1"></div>
+        <div class="aurora-blob blob-2"></div>
+    </div>
+
+    <aside class="sidebar">
+        <a href="/index" class="logo-area">
+            <div class="logo-icon">♻️</div>
+            <span class="logo-text">EcoConsole</span>
+        </a>
+
+        <div class="nav-group-title">核心枢纽 / Core</div>
+        <ul class="nav-list">
+            <li><a href="/index" class="nav-item active">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                数据概览中心
+            </a></li>
+            <li><a href="/identify" class="nav-item">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                AI 视觉识别
+            </a></li>
+            <li><a href="/chat" class="nav-item">
+                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                认知大模型助手
+            </a></li>
+        </ul>
+
+        <div class="nav-group-title">数据与社区 / Data</div>
+        <ul class="nav-list">
+            <li><a href="/history" class="nav-item">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                历史归档与统计
+            </a></li>
+            <li><a href="/community" class="nav-item">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                环保社区动态
+            </a></li>
+            <li><a href="/users" class="nav-item">
+                <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                全站用户管理
+            </a></li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <a href="/login" class="user-mini-card">
+                <div class="user-avatar" id="avatarLetter">A</div>
+                <div class="user-info">
+                    <span class="user-name" id="userNameTxt">Admin</span>
+                    <span class="user-role">登出工作台 🚪</span>
+                </div>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-wrapper">
+        <header class="header">
+            <div class="breadcrumb">EcoConsole <span>/ 概览中心</span></div>
+            <div class="header-actions">
+                <div class="search-bar">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" placeholder="搜索模型、记录或用户... (⌘+K)">
+                </div>
+                <button class="icon-btn">
+                    <div class="badge-dot"></div>
+                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="dashboard-content">
+            <div class="welcome-section">
+                <h1 id="welcomeGreeting">欢迎回来，环保探索者！</h1>
+                <p>实时读取全网真实数据流，监控每一次环保成就的诞生。</p>
+            </div>
+
+            <div class="bento-grid">
+                
+                <div class="bento-card stat-card d-1">
+                    <div class="stat-header">
+                        <div class="stat-icon bg-green">📸</div>
+                        <div class="stat-trend trend-up">↑ RealTime</div>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="stat-identify">0</div>
+                        <div class="stat-label">总计视觉识别次数</div>
+                    </div>
+                </div>
+
+                <div class="bento-card stat-card d-2">
+                    <div class="stat-header">
+                        <div class="stat-icon bg-blue">🧠</div>
+                        <div class="stat-trend trend-up">↑ API Live</div>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="stat-chat">0</div>
+                        <div class="stat-label">大模型会话调用</div>
+                    </div>
+                </div>
+
+                <div class="bento-card stat-card d-3">
+                    <div class="stat-header">
+                        <div class="stat-icon bg-purple">👥</div>
+                        <div class="stat-trend trend-flat">Live DB</div>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="stat-users">0</div>
+                        <div class="stat-label">全站注册环保人数</div>
+                    </div>
+                </div>
+
+                <div class="bento-card stat-card d-4">
+                    <div class="stat-header">
+                        <div class="stat-icon bg-orange">🏅</div>
+                        <div class="stat-trend trend-up">Dynamic</div>
+                    </div>
+                    <div>
+                        <div class="stat-value" id="stat-level">Lv.1</div>
+                        <div class="stat-label">全站当前环保徽章等级</div>
+                    </div>
+                </div>
+
+                <a href="/identify" class="bento-card feature-hero d-5">
+                    <div class="stat-label" style="text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Core Feature</div>
+                    <h3>YOLO 边缘视觉推理</h3>
+                    <p>接入先进的目标检测管线，支持静态图解析与流媒体捕捉，毫秒级判定垃圾归属类目，提供权威分类指南。</p>
+                    <div class="hero-action">立即启动识别引擎 ⚡️</div>
+                </a>
+
+                <a href="/chat" class="bento-card feature-box d-6">
+                    <div class="icon-lg">💬</div>
+                    <h3>DeepSeek 语义中枢</h3>
+                    <p>无法识别的疑难杂症？直接向认知大模型发问，支持复杂逻辑推理与自由对话。</p>
+                    <div class="link-text">开启对话 →</div>
+                </a>
+
+                <a href="/history" class="bento-card feature-box d-6">
+                    <div class="icon-lg">📈</div>
+                    <h3>分类习惯智库</h3>
+                    <p>全自动打通端侧操作日志，构建用户画像，多维统计分类准确率与资源回收趋势。</p>
+                    <div class="link-text">查看报表 →</div>
+                </a>
+
+                <div class="bento-card chart-card d-5">
+                    <div class="card-header">
+                        <div class="card-title">近7天系统调用活跃度 (API Calls)</div>
+                        <div class="stat-trend trend-up" style="background:#f1f5f9;color:#64748b;">本地Mock演算</div>
+                    </div>
+                    <div class="css-chart">
+                        <div class="bar-group"><div class="bar" style="height: 40%;" data-val="120"></div><div class="bar-label">周一</div></div>
+                        <div class="bar-group"><div class="bar" style="height: 65%;" data-val="215"></div><div class="bar-label">周二</div></div>
+                        <div class="bar-group"><div class="bar" style="height: 50%;" data-val="180"></div><div class="bar-label">周三</div></div>
+                        <div class="bar-group"><div class="bar" style="height: 85%;" data-val="310"></div><div class="bar-label">周四</div></div>
+                        <div class="bar-group"><div class="bar" style="height: 70%;" data-val="250"></div><div class="bar-label">周五</div></div>
+                        <div class="bar-group"><div class="bar" style="height: 35%;" data-val="95"></div><div class="bar-label">周六</div></div>
+                        <div class="bar-group"><div class="bar" style="height: 95%; background:var(--primary);" data-val="380"></div><div class="bar-label" style="color:var(--text-main); font-weight:700;">今日</div></div>
+                    </div>
+                </div>
+
+                <div class="bento-card activity-card d-6">
+                    <div class="card-header" style="margin-bottom: 12px;">
+                        <div class="card-title">近期系统追踪</div>
+                    </div>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="act-dot">📸</div>
+                            <div class="act-content">
+                                <div class="act-text">视觉模组识别了一只 <strong>塑料瓶</strong></div>
+                                <div class="act-time">10 分钟前 · 归类: 可回收物</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="act-dot">🤖</div>
+                            <div class="act-content">
+                                <div class="act-text">触发 DeepSeek 大模型查询</div>
+                                <div class="act-time">2 小时前 · 提问: 电池的危害</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="act-dot">🌍</div>
+                            <div class="act-content">
+                                <div class="act-text">发布了新的社区环保打卡动态</div>
+                                <div class="act-time">昨天 16:30 · 获得 5 次点赞</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="act-dot">🔐</div>
+                            <div class="act-content">
+                                <div class="act-text">管理员登录了控制台面板</div>
+                                <div class="act-time">昨天 09:00 · IP: 192.168.1.1</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 1. 初始化用户信息与问候语
+        const currentUser = localStorage.getItem('currentUser') || 'Admin';
+        document.getElementById('userNameTxt').innerText = currentUser;
+        document.getElementById('avatarLetter').innerText = currentUser.charAt(0).toUpperCase();
+        
+        const hour = new Date().getHours();
+        let greeting = '欢迎回来';
+        if (hour < 9) greeting = '早上好，活力满满的一天！';
+        else if (hour < 14) greeting = '中午好，工作辛苦了！';
+        else if (hour < 19) greeting = '下午好，喝杯水休息一下吧！';
+        else greeting = '晚上好，今天的环保任务完成了吗？';
+        document.getElementById('welcomeGreeting').innerText = `${greeting}，${currentUser}`;
+
+        // 图表动画交错
+        const bars = document.querySelectorAll('.bar');
+        bars.forEach((bar, index) => { bar.style.animationDelay = `${0.5 + (index * 0.1)}s`; });
+
+        // 💥 【核心亮点】动态获取真实后台数据并附加超炫数字滚动动画 💥
+        function animateValue(id, start, end, duration) {
+            if (start === end) { document.getElementById(id).innerHTML = end; return; }
+            let range = end - start;
+            let current = start;
+            let increment = end > start ? 1 : -1;
+            // 控制步长，让动画保持在大约 duration 毫秒内完成
+            let stepTime = Math.abs(Math.floor(duration / Math.max(range, 1)));
+            if (stepTime < 20) stepTime = 20; // 性能兜底
+            let obj = document.getElementById(id);
+            let timer = setInterval(function() {
+                current += increment;
+                obj.innerHTML = current;
+                if (current == end) { clearInterval(timer); }
+            }, stepTime);
+        }
+
+        async function fetchRealStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                if (data.success) {
+                    // 让前端的数字生动地“跑”起来，而不是冷冰冰地一闪而过！
+                    animateValue('stat-identify', 0, data.identify_count, 1500);
+                    animateValue('stat-chat', 0, data.chat_count, 1500);
+                    animateValue('stat-users', 0, data.user_count, 1000);
+                    
+                    // 利用识别次数与对话次数计算动态成就等级
+                    const level = Math.floor((data.identify_count + data.chat_count) / 5) + 1;
+                    document.getElementById('stat-level').innerText = 'Lv.' + level;
+                }
+            } catch (e) {
+                console.error('从服务器拉取真实大盘数据失败:', e);
+            }
+        }
+        
+        // 页面启动时拉取最新真实数据
+        fetchRealStats();
+    </script>
+</body>
+</html>

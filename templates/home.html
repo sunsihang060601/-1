@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>智能垃圾分类系统 - 拯救地球的第一步</title>
+    <style>
+        /* 基础重置与平滑字体 */
+        * { box-sizing: border-box; }
+        body, html { 
+            margin: 0; padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            height: 100%; 
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .page-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?q=80&w=2070&auto=format&fit=crop&blur=5'); 
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .page-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: 1;
+        }
+
+        #particles-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            padding: 0 20px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .navbar {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 0;
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #55efc4;
+            gap: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .nav-btn {
+            padding: 9px 22px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        .btn-login {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: #fff;
+        }
+        .btn-register {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7); 
+            border: none;
+            color: white;
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+        }
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,255,255,0.1);
+        }
+
+        .hero-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            max-width: 800px;
+            margin-top: -60px;
+        }
+        
+        h1 {
+            color: #fff;
+            margin: 0 0 25px 0;
+            font-size: 40px;
+            line-height: 1.2;
+            letter-spacing: 3px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        .highlight-text {
+            color: #0ea5e9;
+            font-size: 48px;
+            font-weight: 900;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 17px;
+            margin: 0 0 50px 0;
+            line-height: 1.9;
+            max-width: 650px;
+        }
+
+        .action-area {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 60px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+            color: white;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 35px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.5);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-primary:active { transform: translateY(2px); box-shadow: none; }
+        .btn-primary:hover { box-shadow: 0 10px 25px rgba(14, 165, 233, 0.6); }
+        
+        /* 了解更多：去掉浮动，固定不动、不可点击 */
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 16px 40px;
+            border-radius: 35px;
+            font-size: 17px;
+            cursor: default;
+            pointer-events: none;
+            /* 删掉 animation: floatVertical */
+        }
+
+        /* 上下浮动动画（给四个功能标签用） */
+        @keyframes floatVertical {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* 功能标签：同行排列 + 缩小尺寸 + 保留浮动 */
+        .features-pills {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 14px;
+            justify-content: center;
+            max-width: 100%;
+            margin-bottom: 50px;
+        }
+        .pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            cursor: default;
+            pointer-events: none;
+            animation: floatVertical 2s infinite ease-in-out;
+            white-space: nowrap;
+        }
+
+        .footer {
+            padding-bottom: 25px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            width: 100%;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .navbar { padding: 15px 0; }
+            h1 { font-size: 26px; }
+            .highlight-text { font-size: 30px; }
+            .subtitle { font-size: 15px; margin-bottom: 30px; }
+            .action-area { flex-direction: column; width: 100%; max-width: 280px; gap: 15px;}
+            .btn-primary, .btn-secondary { width: 100%; justify-content: center; padding: 12px 20px; font-size: 16px;}
+            .pill { padding: 6px 12px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <canvas id="particles-bg"></canvas>
+        <div class="container">
+            <nav class="navbar">
+                <div class="nav-logo">
+                    <span>♻️</span> 垃圾分类智能系统
+                </div>
+                <div class="nav-actions">
+                    <button class="nav-btn btn-login" onclick="window.location.href='/login'">登录</button>
+                    <button class="nav-btn btn-register" onclick="window.location.href='/signup'">免费注册</button>
+                </div>
+            </nav>
+
+            <div class="hero-section">
+                <h1>
+                    智能垃圾分类<br>
+                    <span class="highlight-text">识别与科普系统</span>
+                </h1>
+                <p class="subtitle">
+                    告别分类烦恼，拯救地球的第一步。每一次准确投放，都在改变世界。
+                </p>
+                <div class="action-area">
+                    <button class="btn-primary" onclick="window.location.href='/login'">
+                        🚀 立即开始使用
+                    </button>
+                    <button class="btn-secondary">
+                        了解更多功能
+                    </button>
+                </div>
+
+                <div class="features-pills">
+                    <div class="pill">智能识别</div>
+                    <div class="pill">AI问答助手</div>
+                    <div class="pill">历史记录与统计</div>
+                    <div class="pill">环保“朋友圈”交流广场</div>
+                </div>
+            </div>
+
+            <div class="footer">
+                © 2024 智能垃圾分类系统团队 版权所有
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('particles-bg');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let mouse = { x: null, y: null, radius: 150 };
+
+        window.addEventListener('mousemove', (event) => { mouse.x = event.x; mouse.y = event.y; });
+        window.addEventListener('mouseout', () => { mouse.x = null; mouse.y = null; });
+
+        function initParticles() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            let particleCount = (canvas.width * canvas.height) / 10000;
+            if(particleCount > 120) particleCount = 120;
+
+            for (let i = 0; i < particleCount; i++) {
+                let colorType = Math.random() > 0.8 ? '180, 240, 255' : '255, 255, 255'; 
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 2 + 0.5, 
+                    colorRGB: colorType,
+                    alpha: Math.random() * 0.5 + 0.2,
+                    speedX: (Math.random() - 0.5) * 1.0,
+                    speedY: (Math.random() - 0.5) * 1.0, 
+                });
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                if (mouse.x != null) {
+                    let dx = mouse.x - p.x;
+                    let dy = mouse.y - p.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < mouse.radius) {
+                        const forceDirectionX = dx / distance;
+                        const forceDirectionY = dy / distance;
+                        const force = (mouse.radius - distance) / mouse.radius;
+                        p.x -= forceDirectionX * force * 1.5;
+                        p.y -= forceDirectionY * force * 1.5;
+                    }
+                }
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${p.colorRGB}, ${p.alpha})`;
+                ctx.fill();
+                p.x += p.speedX;
+                p.y += p.speedY;
+                if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+            }
+            drawLines();
+        }
+
+        function drawLines() {
+            for (let i = 0; i < particles.length; i++) {
+                if (mouse.x != null) {
+                    let dx = particles[i].x - mouse.x;
+                    let dy = particles[i].y - mouse.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < mouse.radius) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.strokeStyle = `rgba(${particles[i].colorRGB}, ${0.2 * (1 - distance / mouse.radius)})`;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 110) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        let opacity = 0.2 * (1 - distance / 110);
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                        ctx.lineWidth = 0.6;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        window.addEventListener('resize', () => initParticles() );
+        initParticles();
+        animate();
+    </script>
+</body>
+</html>

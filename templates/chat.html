@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI智能问答助手 - Dashboard</title>
+    <style>
+        :root { --bg-main: #fafafa; --sidebar-bg: #ffffff; --card-bg: #ffffff; --border-color: #e5e7eb; --text-main: #111827; --text-muted: #6b7280; --primary: #10b981; --sidebar-width: 260px; --shadow-sm: 0 1px 3px rgba(0,0,0,0.05); }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; display: flex; background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 24px 24px; }
+        .sidebar { width: var(--sidebar-width); background: var(--sidebar-bg); border-right: 1px solid var(--border-color); position: fixed; top: 0; bottom: 0; left: 0; display: flex; flex-direction: column; padding: 24px 16px; z-index: 100; }
+        .brand-logo { display: flex; align-items: center; gap: 12px; font-size: 1.25rem; font-weight: 700; color: var(--text-main); padding: 12px; margin-bottom: 32px; border-bottom: 1px solid var(--border-color); text-decoration: none; transition: 0.2s; }
+        .brand-logo:hover { opacity: 0.8; }
+        .nav-menu { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        .nav-item { display: flex; align-items: center; gap: 14px; padding: 12px 16px; color: var(--text-muted); text-decoration: none; font-size: 0.95rem; font-weight: 500; border-radius: 8px; transition: 0.2s; }
+        .nav-item:hover { background: #f3f4f6; color: var(--text-main); }
+        .nav-item.active { background: rgba(16, 185, 129, 0.1); color: var(--primary); }
+        .sidebar-footer { padding: 12px; border-top: 1px solid var(--border-color); }
+        .logout-btn { display: flex; align-items: center; gap: 10px; color: #ef4444; text-decoration: none; font-size: 0.95rem; padding: 10px; border-radius: 6px; }
+        .logout-btn:hover { background: #fef2f2; }
+        .main-wrapper { margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); display: flex; flex-direction: column; height: 100vh; }
+        .top-header { height: 75px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; background: rgba(250, 250, 250, 0.8); backdrop-filter: blur(8px); }
+        .chat-container { flex: 1; display: flex; flex-direction: column; padding: 30px 40px; overflow: hidden; }
+        .chat-main { flex: 1; display: flex; flex-direction: column; background: #ffffff; border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow-sm); overflow: hidden; }
+        .chat-messages { flex: 1; padding: 25px; overflow-y: auto; background: #f9fafb; }
+        .message { margin-bottom: 20px; display: flex; gap: 12px; max-width: 85%; }
+        .user-message { margin-left: auto; flex-direction: row-reverse; }
+        .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+        .ai-avatar { background: linear-gradient(135deg, #10b981, #6ee7b7); color: white; }
+        .user-avatar { background: #4b5563; color: white; }
+        .message-content { padding: 12px 18px; border-radius: 12px; line-height: 1.6; font-size: 0.98rem; background: #ffffff; border: 1px solid var(--border-color); }
+        .user-message .message-content { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .chat-input-area { padding: 20px 25px; background: #ffffff; border-top: 1px solid var(--border-color); display: flex; gap: 15px; }
+        .chat-input { flex: 1; padding: 14px 18px; border: 1px solid var(--border-color); border-radius: 10px; font-size: 1rem; outline: none; background: #f9fafb; }
+        .chat-input:focus { border-color: var(--primary); background: #fff; }
+        .send-btn { padding: 0 25px; background: var(--primary); color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
+        .welcome-tip { text-align: center; padding: 30px; color: var(--text-muted); }
+        .quick-questions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 15px; }
+        .quick-question { padding: 6px 14px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 20px; color: var(--primary); font-size: 0.88rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <a href="/index" class="brand-logo"><span>♻️</span><span>EcoConsole</span></a>
+        <div class="nav-menu">
+            <a href="/index" class="nav-item">📊 概览中心</a>
+            <a href="/identify" class="nav-item">📷 智能识别</a>
+            <a href="/chat" class="nav-item active">🤖 AI助手</a>
+            <a href="/history" class="nav-item">📊 历史统计</a>
+            <a href="/community" class="nav-item">🌍 环保社区</a>
+            <a href="/users" class="nav-item">👥 用户管理</a>
+        </div>
+        <div class="sidebar-footer"><a href="/login" class="logout-btn">🚪 退出工作台</a></div>
+    </div>
+
+    <div class="main-wrapper">
+        <div class="top-header"><div style="font-weight: 500; color: var(--text-muted);">工作台 / AI智能问答</div></div>
+        <div class="chat-container">
+            <div class="chat-main">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message ai-message">
+                        <div class="avatar ai-avatar">🤖</div>
+                        <div class="message-content">
+                            <div class="welcome-tip">
+                                <h3 style="color:var(--text-main); margin-bottom:8px;">你好！我是您的全能环保AI大脑</h3>
+                                <p>不仅能精准判定垃圾，也可以帮您解答数学题，或者随便聊聊！</p>
+                                <div class="quick-questions">
+                                    <div class="quick-question">电池属于什么垃圾？</div>
+                                    <div class="quick-question">帮我算一下 125 乘以 8 等于几？</div>
+                                    <div class="quick-question">给我讲一个环保幽默笑话。</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="在此键入您的任何问题...">
+                    <button class="send-btn" id="sendBtn">发送指令</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DEEPSEEK_API_KEY = 'sk-61c86f196e0e457493a8707f5a73a3ac'; 
+        const API_URL = 'https://api.deepseek.com/chat/completions';
+
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const quickQuestions = document.querySelectorAll('.quick-question');
+
+        function saveChatHistory(question, answer) {
+            let history = JSON.parse(localStorage.getItem('chatHistory')) || [];
+            const now = new Date();
+            const timeString = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            history.unshift({ time: timeString, question: question, answer: answer });
+            if(history.length > 20) history.pop(); 
+            localStorage.setItem('chatHistory', JSON.stringify(history));
+        }
+
+        async function sendMessage(text) {
+            if (!text.trim()) return;
+            addMessage(text, 'user');
+            chatInput.value = '';
+
+            const loadingId = Date.now();
+            addMessage(`<span id="loading-${loadingId}" style="color:#888;">🤔 大脑正在高速运转中...</span>`, 'ai');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            try {
+                // 💥【新增】: 向咱们自己的后台偷偷汇报一次，让主页的数据实时 +1
+                fetch('/api/track_chat', { method: 'POST' }).catch(e => console.log('统计汇报静默失败', e));
+
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DEEPSEEK_API_KEY}` },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: [
+                            { role: "system", content: "你是一个智能环保助手。如果问垃圾分类，请精准解答并给出投放指南。如果是闲聊、数学计算等其他领域问题，请像一个无所不知的AI朋友一样流畅自然、简明扼要地回答用户。" },
+                            { role: "user", content: text }
+                        ],
+                        temperature: 0.7 
+                    })
+                });
+                const data = await response.json();
+                const aiReply = data.choices[0].message.content;
+                document.getElementById(`loading-${loadingId}`).parentElement.remove();
+                addMessage(aiReply, 'ai');
+                saveChatHistory(text, aiReply.replace(/\*\*/g, '')); 
+            } catch (error) {
+                document.getElementById(`loading-${loadingId}`).innerHTML = "⚠️ 神经管区通讯失败，请检查网络或配置。";
+            }
+        }
+
+        function addMessage(text, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            messageDiv.innerHTML = `<div class="avatar ${type}-avatar">${type==='ai'?'🤖':'👤'}</div><div class="message-content">${text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        sendBtn.onclick = () => sendMessage(chatInput.value);
+        chatInput.onkeydown = e => { if(e.key==='Enter') sendMessage(chatInput.value); };
+        quickQuestions.forEach(btn => btn.onclick = () => sendMessage(btn.textContent));
+    </script>
+</body>
+</html>
